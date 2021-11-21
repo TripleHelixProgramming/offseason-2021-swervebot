@@ -5,16 +5,18 @@
 package frc.robot.drive.commands;
 
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import edu.wpi.first.wpilibj.kinematics.ChassisSpeeds;
+//import edu.wpi.first.wpilibj.geometry.Pose2d;
+import edu.wpi.first.wpilibj.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.geometry.Translation2d;
 import frc.robot.drive.Drivetrain;
+import frc.lib.SettablePose;
 
 public abstract class Drive extends CommandBase {
 
-    private double xDot;
-    private double yDot;
-    private double thetaDot;
+    private Translation2d xyDot;
+    private Rotation2d thetaDot;
     private boolean fieldRelative;
-    private ChassisSpeeds chassisSpeeds;
+    private SettablePose deltaPose;
 
     // The subsystem the command runs on
     public final Drivetrain drivetrain;
@@ -30,20 +32,19 @@ public abstract class Drive extends CommandBase {
             
     @Override
     public void execute() {
-        xDot = getX();
-        yDot = getY();
-        thetaDot = getTheta();
+        xyDot = new Translation2d(getX(), getY());
+        thetaDot = new Rotation2d(getTheta());
+        deltaPose = new SettablePose(xyDot, thetaDot);
         fieldRelative = getFieldRelative();
 
-        chassisSpeeds = fieldRelative
-            ? ChassisSpeeds.fromFieldRelativeSpeeds(xDot, yDot, thetaDot, drivetrain.getHeading())
-            : new ChassisSpeeds(xDot, yDot, thetaDot);
-
-        drivetrain.drive(chassisSpeeds);
+        drivetrain.drive(deltaPose, fieldRelative);
     }
 
     abstract public double getX();
     abstract public double getY();
     abstract public double getTheta();
-    abstract public boolean getFieldRelative();
+
+    public boolean getFieldRelative() {
+        return false;
+    };
 }

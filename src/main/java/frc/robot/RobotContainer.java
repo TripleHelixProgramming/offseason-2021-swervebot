@@ -21,8 +21,8 @@ import frc.robot.drive.commands.ResetEncoders;
 import edu.wpi.first.wpilibj.geometry.Pose2d;
 import edu.wpi.first.wpilibj.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.geometry.Translation2d;
+import frc.lib.SettablePose;
 import edu.wpi.first.wpilibj.kinematics.SwerveModuleState;
-import edu.wpi.first.wpilibj.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.trajectory.Trajectory;
 import edu.wpi.first.wpilibj.trajectory.TrajectoryConfig;
@@ -151,8 +151,8 @@ public class RobotContainer {
     m_robotDrive.resetOdometry(exampleTrajectory.getInitialPose());
 
     // Run path following command, then stop at the end.
-    ChassisSpeeds stop = new ChassisSpeeds(0.0, 0.0, 0.0);
-    return swerveControllerCommand.andThen(() -> m_robotDrive.drive(stop));
+    SettablePose stop = new SettablePose(new Translation2d(0.0, 0.0), new Rotation2d(0.0));
+    return swerveControllerCommand.andThen(() -> m_robotDrive.drive(stop, false));
   }
 
   public double getTranslateXJoystick() {

@@ -5,11 +5,11 @@
 package frc.robot.drive;
 
 import frc.robot.Constants.DriveConstants;
-import frc.robot.Constants.AutoConstants;
 import edu.wpi.first.wpilibj.geometry.Pose2d;
 import edu.wpi.first.wpilibj.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.geometry.Transform2d;
 import edu.wpi.first.wpilibj.geometry.Translation2d;
+import frc.lib.SettablePose;
 import edu.wpi.first.wpilibj.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.wpilibj.kinematics.SwerveDriveOdometry;
@@ -25,6 +25,7 @@ import com.analog.adis16470.frc.ADIS16470_IMU;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.FormatterClosedException;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -71,7 +72,7 @@ public class Drivetrain extends SubsystemBase {
   SwerveDriveOdometry m_odometry;
 
   //target pose and controller
-  Pose2d m_targetPose;
+  SettablePose m_targetPose;
   PIDController m_thetaController = new PIDController(1.0, 0.0, 0.05);
   //ProfiledPIDController m_thetaController = new ProfiledPIDController(
   //  AutoConstants.kPThetaController, 0, 0, AutoConstants.kThetaControllerConstraints);
@@ -95,7 +96,6 @@ public class Drivetrain extends SubsystemBase {
     m_rearLeft.syncTurningEncoders();
     m_rearRight.syncTurningEncoders();
 
-    m_targetPose = m_odometry.getPoseMeters();
     m_thetaController.reset();
     m_thetaController.enableContinuousInput(-Math.PI, Math.PI);
   }
@@ -160,8 +160,7 @@ public class Drivetrain extends SubsystemBase {
    * @param deltaTheta How much to rotate the target orientation per loop.
    */
   public void rotateRelative(Rotation2d deltaTheta) {
-    Transform2d transform = new Transform2d(new Translation2d(), deltaTheta);
-    m_targetPose = m_targetPose.transformBy(transform);
+    m_targetPose.incrementRotation(deltaTheta);
   }
 
   /**
@@ -170,7 +169,7 @@ public class Drivetrain extends SubsystemBase {
    * @param theta The target orientation.
    */
   public void rotateAbsolute(Rotation2d theta) {
-    m_targetPose = new Pose2d(new Translation2d(), theta);
+    m_targetPose.setRotation(theta);
   }
 
   /**
@@ -188,27 +187,41 @@ public class Drivetrain extends SubsystemBase {
   /**
    * Method to drive the robot with given velocities.
    *
-   * @param speeds ChassisSpeeds object with the desired chassis speeds [m/s and rad/s].
+   * @param deltaPose SettablePose object with the desired speeds [m/s and rad/s].
+   * @param fieldRelative Whether the translation element of the deltaPose is relative to the field.
    */
   @SuppressWarnings("ParameterName")
-  public void drive(ChassisSpeeds speeds) {
+  public void drive(SettablePose deltaPose, boolean fieldRelative) {
 
-    //double xDot, double yDot, double thetaDot, boolean fieldRelative
+    SettablePose chassisSpeeds = deltaPose;
+    if (fieldRelative) {
+      chassisSpeeds.incrementRotation(getPose().getRotation());
+    }
+    
+    double x = chassisSpeeds.getX();
+    double y = chassisSpeeds.getY();
+    double theta = chassisSpeeds.getRotation().getRadians();
+    ChassisSpeeds speeds = new ChassisSpeeds(x, y, theta);
     
     SwerveModuleState[] swerveModuleStates =
         DriveConstants.kDriveKinematics.toSwerveModuleStates(speeds);
            
-    normalizeDrive(swerveModuleStates, DriveConstants.kMaxSpeedMetersPerSecond, speeds);
+    normalizeDrive(swerveModuleStates, chassisSpeeds);
     setModuleStates(swerveModuleStates);
   }
 
-  public void normalizeDrive(SwerveModuleState[] desiredStates, 
-                                      double maxVelocity,
-                                      ChassisSpeeds speeds) {
+  /**
+   * Method to normalize the swerve module output speeds to within physical limits.
+   *
+   * @param desiredStates Array of target swerve module states.
+   * @param chassisSpeeds SettablePose object with the desired chassis speeds [m/s and rad/s].
+   */
+  public void normalizeDrive(SwerveModuleState[] desiredStates, SettablePose chassisSpeeds) {
 
-    double x = speeds.vxMetersPerSecond;
-    double y = speeds.vyMetersPerSecond;
-    double theta = speeds.omegaRadiansPerSecond;
+    double maxVelocity = DriveConstants.kMaxSpeedMetersPerSecond;
+    double x = chassisSpeeds.getX();
+    double y = chassisSpeeds.getY();
+    double theta = chassisSpeeds.getRotation().getRadians();
 
     // Find the how fast the fastest spinning drive motor is spinning                                       
     double realMaxSpeed = 0.0;
@@ -264,9 +277,16 @@ public class Drivetrain extends SubsystemBase {
 
   /** Zeroes the heading of the robot. */
   public void zeroHeading() {
-    m_gyro.calibrate();
-    m_gyro.reset();
-//    m_pigeon.setYaw(0.0);
+    //m_gyro.calibrate();
+    //m_gyro.reset();
+    //m_pigeon.setYaw(0.0);
+    m_odometry.update(
+        new Rotation2d(),
+        m_frontLeft.getState(),
+        m_frontRight.getState(),
+        m_rearLeft.getState(),
+        m_rearRight.getState());
+    m_targetPose.setRotation(new Rotation2d());
   }
 
   /**
