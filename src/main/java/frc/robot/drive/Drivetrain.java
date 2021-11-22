@@ -7,8 +7,6 @@ package frc.robot.drive;
 import frc.robot.Constants.DriveConstants;
 import edu.wpi.first.wpilibj.geometry.Pose2d;
 import edu.wpi.first.wpilibj.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.geometry.Transform2d;
-import edu.wpi.first.wpilibj.geometry.Translation2d;
 import frc.lib.SettablePose;
 import edu.wpi.first.wpilibj.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.kinematics.SwerveDriveKinematics;
@@ -25,7 +23,6 @@ import com.analog.adis16470.frc.ADIS16470_IMU;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.FormatterClosedException;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
