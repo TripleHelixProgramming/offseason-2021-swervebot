@@ -18,10 +18,9 @@ import frc.robot.drive.commands.JoystickDrive;
 import frc.robot.drive.commands.RelativeOrientation;
 import frc.robot.drive.commands.AbsoluteOrientation;
 import frc.robot.drive.commands.ResetEncoders;
-import edu.wpi.first.wpilibj.geometry.Pose2d;
 import edu.wpi.first.wpilibj.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.geometry.Translation2d;
-import frc.lib.SettablePose;
+import frc.lib.Pose;
 import edu.wpi.first.wpilibj.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.trajectory.Trajectory;
@@ -122,11 +121,11 @@ public class RobotContainer {
     Trajectory exampleTrajectory =
         TrajectoryGenerator.generateTrajectory(
             // Start at the origin facing the +X direction
-            new Pose2d(0, 0, new Rotation2d(0)),
+            new Pose(0, 0, new Rotation2d(0)).toPose2d(),
             // Pass through these two interior waypoints, making an 's' curve path
             List.of(new Translation2d(1, 1), new Translation2d(2, -1)),
             // End 3 meters straight ahead of where we started, facing forward
-            new Pose2d(3, 0, new Rotation2d(0)),
+            new Pose(3, 0, new Rotation2d(0)).toPose2d(),
             config);
 
     var thetaController =
@@ -137,7 +136,7 @@ public class RobotContainer {
     SwerveControllerCommand swerveControllerCommand =
         new SwerveControllerCommand(
             exampleTrajectory,
-            m_robotDrive::getPose, // Functional interface to feed supplier
+            m_robotDrive::getPose2d, // Functional interface to feed supplier
             DriveConstants.kDriveKinematics,
 
             // Position controllers
@@ -148,10 +147,10 @@ public class RobotContainer {
             m_robotDrive);
 
     // Reset odometry to the starting pose of the trajectory.
-    m_robotDrive.resetOdometry(exampleTrajectory.getInitialPose());
+    m_robotDrive.resetOdometry(new Pose(exampleTrajectory.getInitialPose()));
 
     // Run path following command, then stop at the end.
-    SettablePose stop = new SettablePose(new Translation2d(0.0, 0.0), new Rotation2d(0.0));
+    Pose stop = new Pose(new Translation2d(0.0, 0.0), new Rotation2d(0.0));
     return swerveControllerCommand.andThen(() -> m_robotDrive.drive(stop, false));
   }
 

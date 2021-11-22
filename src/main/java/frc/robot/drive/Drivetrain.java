@@ -7,7 +7,7 @@ package frc.robot.drive;
 import frc.robot.Constants.DriveConstants;
 import edu.wpi.first.wpilibj.geometry.Pose2d;
 import edu.wpi.first.wpilibj.geometry.Rotation2d;
-import frc.lib.SettablePose;
+import frc.lib.Pose;
 import edu.wpi.first.wpilibj.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.wpilibj.kinematics.SwerveDriveOdometry;
@@ -71,7 +71,7 @@ public class Drivetrain extends SubsystemBase {
   SwerveDriveOdometry m_odometry;
 
   //target pose and controller
-  SettablePose m_targetPose;
+  Pose m_targetPose;
   PIDController m_thetaController = new PIDController(1.0, 0.0, 0.05);
   //ProfiledPIDController m_thetaController = new ProfiledPIDController(
   //  AutoConstants.kPThetaController, 0, 0, AutoConstants.kThetaControllerConstraints);
@@ -129,25 +129,7 @@ public class Drivetrain extends SubsystemBase {
   }
 
   /**
-   * Returns the currently-estimated pose of the robot.
-   *
-   * @return The pose.
-   */
-  public Pose2d getPose() {
-    return m_odometry.getPoseMeters();
-  }
-
-  /**
-   * Resets the odometry to the specified pose.
-   *
-   * @param pose The pose to which to set the odometry.
-   */
-  public void resetOdometry(Pose2d pose) {
-    m_odometry.resetPosition(pose, getHeading());
-  }
-
-  /**
-   * Method to rotate the relative orientation of the target pose at a given rate.
+   * Rotate the relative orientation of the target pose at a given rate.
    *
    * @param deltaTheta How much to rotate the target orientation per loop.
    */
@@ -156,7 +138,7 @@ public class Drivetrain extends SubsystemBase {
   }
 
   /**
-   * Method to set the absolute orientation of the target pose.
+   * Set the absolute orientation of the target pose.
    *
    * @param theta The target orientation.
    */
@@ -165,7 +147,7 @@ public class Drivetrain extends SubsystemBase {
   }
 
   /**
-   * Method to get the output of the chassis orientation PID controller.
+   * Get the output of the chassis orientation PID controller.
    *
    */
   public double getThetaDot() {
@@ -177,15 +159,15 @@ public class Drivetrain extends SubsystemBase {
   }
 
   /**
-   * Method to drive the robot with given velocities.
+   * Drive the robot with given velocities.
    *
    * @param deltaPose SettablePose object with the desired speeds [m/s and rad/s].
    * @param fieldRelative Whether the translation element of the deltaPose is relative to the field.
    */
   @SuppressWarnings("ParameterName")
-  public void drive(SettablePose deltaPose, boolean fieldRelative) {
+  public void drive(Pose deltaPose, boolean fieldRelative) {
 
-    SettablePose chassisSpeeds = deltaPose;
+    Pose chassisSpeeds = deltaPose;
     if (fieldRelative) {
       chassisSpeeds.incrementRotation(getPose().getRotation());
     }
@@ -208,7 +190,7 @@ public class Drivetrain extends SubsystemBase {
    * @param desiredStates Array of target swerve module states.
    * @param chassisSpeeds SettablePose object with the desired chassis speeds [m/s and rad/s].
    */
-  public void normalizeDrive(SwerveModuleState[] desiredStates, SettablePose chassisSpeeds) {
+  public void normalizeDrive(SwerveModuleState[] desiredStates, Pose chassisSpeeds) {
 
     double maxVelocity = DriveConstants.kMaxSpeedMetersPerSecond;
     double x = chassisSpeeds.getX();
@@ -257,6 +239,15 @@ public class Drivetrain extends SubsystemBase {
     return states;
   }
 
+  /**
+   * Resets the odometry to the specified pose.
+   *
+   * @param pose The pose to which to set the odometry.
+   */
+  public void resetOdometry(Pose pose) {
+    m_odometry.resetPosition(pose.toPose2d(), getHeading());
+  }
+
   /** Resets the drive encoders to currently read a position of 0. */
   public void resetEncoders() {
 
@@ -280,6 +271,19 @@ public class Drivetrain extends SubsystemBase {
   }
 
   /**
+   * Returns the currently-estimated pose of the robot.
+   *
+   * @return The pose.
+   */
+  public Pose getPose() {
+    return new Pose(getPose2d());
+  }
+
+  public Pose2d getPose2d() {
+    return m_odometry.getPoseMeters();
+  }
+
+  /**
    * Returns the heading of the robot.
    *
    * @return the robot's heading as a Rotation2d
@@ -290,7 +294,6 @@ public class Drivetrain extends SubsystemBase {
     // m_pigeon.getYawPitchRoll(ypr_deg);
     // return new Rotation2d(Math.toRadians(ypr_deg[0]));
   }
-
 
   /**
    * Returns the turn rate of the robot.

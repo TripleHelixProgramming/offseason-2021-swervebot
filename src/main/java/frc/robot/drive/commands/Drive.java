@@ -5,18 +5,17 @@
 package frc.robot.drive.commands;
 
 import edu.wpi.first.wpilibj2.command.CommandBase;
-//import edu.wpi.first.wpilibj.geometry.Pose2d;
 import edu.wpi.first.wpilibj.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.geometry.Translation2d;
 import frc.robot.drive.Drivetrain;
-import frc.lib.SettablePose;
+import frc.lib.Pose;
 
 public abstract class Drive extends CommandBase {
 
     private Translation2d xyDot;
     private Rotation2d thetaDot;
     private boolean fieldRelative;
-    private SettablePose deltaPose;
+    private Pose deltaPose;
 
     // The subsystem the command runs on
     public final Drivetrain drivetrain;
@@ -34,7 +33,7 @@ public abstract class Drive extends CommandBase {
     public void execute() {
         xyDot = new Translation2d(getX(), getY());
         thetaDot = new Rotation2d(getTheta());
-        deltaPose = new SettablePose(xyDot, thetaDot);
+        deltaPose = new Pose(xyDot, thetaDot);
         fieldRelative = getFieldRelative();
 
         drivetrain.drive(deltaPose, fieldRelative);
