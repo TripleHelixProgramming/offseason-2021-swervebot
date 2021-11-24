@@ -88,7 +88,8 @@ public class RobotContainer {
   }
 
   private void setDefaultCommands() {
-    m_robotDrive.setDefaultCommand(new RelativeOrientation(m_robotDrive));
+//    m_robotDrive.setDefaultCommand(new RelativeOrientation(m_robotDrive));
+    m_robotDrive.setDefaultCommand(new JoystickDrive(m_robotDrive));
   }
 
   /**
