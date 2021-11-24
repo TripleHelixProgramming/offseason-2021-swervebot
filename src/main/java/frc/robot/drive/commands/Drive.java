@@ -45,5 +45,8 @@ public abstract class Drive extends CommandBase {
     abstract public double getX();
     abstract public double getY();
     abstract public double getTheta();
-    abstract public boolean getFieldRelative();
+    
+    public boolean getFieldRelative() {
+        return false;
+    }
 }
