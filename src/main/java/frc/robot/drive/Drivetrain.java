@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.wpilibj.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.wpilibj.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj.controller.PIDController;
 //import edu.wpi.first.wpilibj.controller.ProfiledPIDController;
 
@@ -28,6 +29,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 @SuppressWarnings("PMD.ExcessiveImports")
 public class Drivetrain extends SubsystemBase {
+
+  private Preferences prefs = Preferences.getInstance();
+  
   // Robot swerve modules
   private final SwerveModule m_frontLeft =
       new SwerveModule(
@@ -71,7 +75,7 @@ public class Drivetrain extends SubsystemBase {
   SwerveDriveOdometry m_odometry;
 
   //target pose and controller
-  Pose m_targetPose;
+  Pose m_targetPose = new Pose();
   PIDController m_thetaController = new PIDController(1.0, 0.0, 0.05);
   //ProfiledPIDController m_thetaController = new ProfiledPIDController(
   //  AutoConstants.kPThetaController, 0, 0, AutoConstants.kThetaControllerConstraints);
@@ -192,7 +196,7 @@ public class Drivetrain extends SubsystemBase {
    */
   public void normalizeDrive(SwerveModuleState[] desiredStates, Pose chassisSpeeds) {
 
-    double maxVelocity = DriveConstants.kMaxSpeedMetersPerSecond;
+    double maxVelocity = prefs.getDouble("kMaxSpeedMetersPerSecond",DriveConstants.kMaxSpeedMetersPerSecond);
     double x = chassisSpeeds.getX();
     double y = chassisSpeeds.getY();
     double theta = chassisSpeeds.getRotation().getRadians();
@@ -221,7 +225,7 @@ public class Drivetrain extends SubsystemBase {
   public void setModuleStates(SwerveModuleState[] desiredStates) {
 
     SwerveDriveKinematics.normalizeWheelSpeeds(
-        desiredStates, DriveConstants.kMaxSpeedMetersPerSecond);
+        desiredStates, prefs.getDouble("kMaxSpeedMetersPerSecond",DriveConstants.kMaxSpeedMetersPerSecond));
 
         for (int i = 0; i <= 3; i++) {
           modules[i].setDesiredState(desiredStates[i]);
